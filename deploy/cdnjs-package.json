@@ -1,0 +1,32 @@
+{
+  "name": "mithril.elements",
+  "npmName": "mithril.elements",
+  "version": "$version",
+  "filename": "mithril.elements.min.js",
+  "description": "Write beautiful elements web applications using the utterly brilliant Mithril javascript framework.",
+  "homepage": "http://philtoms.github.io/mithril.elements",
+  "license": "MIT",
+  "main": "mithril.elements",
+  "keywords": [
+    "mvc",
+    "browser"
+  ],
+  "author": "Phil Toms <phil.toms@hotmail.co.uk>",
+  "contributors": [
+  ],
+  "bugs": "https://github.com/philtoms/mithril.elements.js/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/philtoms/mithril.semntic.js.git"
+  },
+  "npmFileMap": [
+    {
+      "basePath": "/",
+      "files": [
+        "mithril.elements.js",
+        "mithril.elements.min.js",
+        "mithril.elements.min.map"
+      ]
+    }
+  ]
+}
