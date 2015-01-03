@@ -12,4 +12,4 @@ becomes:
 		<span>Hi</span><span>Bob!</span>
 	</div>
 ```
-For more informtion, please visit [Mithril.Elements Starter Kit](https://github.com/philtoms/mithril-elements-starter-kit)
+For more informtion, please visit [Mithril.Elements Starter Kit](https://github.com/philtoms/mithril-starter-kit)

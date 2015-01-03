@@ -1,10 +1,14 @@
 {
   "name": "mithril.elements",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "scripts": {
     "test": "grunt test"
   },
   "main": "mithril.elements.js",
+  "repository" : { 
+    "type" : "git",
+    "url" : "http://github.com/philtoms/mithril.elements.git"
+  },
   "devDependencies": {
     "grunt-cli": "*",
     "grunt-contrib-copy": "*",
@@ -31,6 +35,6 @@
     "sauce-tunnel": "~2.0.6",
     "colors": "~0.6.2",
     "lodash": "~2.4.1",
-    "mithril": "~0.1.27"
+    "mithril": "0.1.28"
   }
 }
