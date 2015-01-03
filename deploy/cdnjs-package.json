@@ -9,7 +9,8 @@
   "main": "mithril.elements",
   "keywords": [
     "mvc",
-    "browser"
+    "browser",
+    "custom elements"
   ],
   "author": "Phil Toms <phil.toms@hotmail.co.uk>",
   "contributors": [

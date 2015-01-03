@@ -9,7 +9,7 @@ function testMithrilElements(mock) {
 		view: function(ctrl,ctx){
 			if (ctrl.data) ctrl.data.spy++;
 			if (typeof ctx === 'function') return m('div',ctx('test1'));
-			return m('div',ctx || 'test2')
+			return m('div',ctx);
 		}
 	}
 	var data;
@@ -19,39 +19,51 @@ function testMithrilElements(mock) {
 		m.redraw();
 	}
 
-	//m.elements
+	//m.element
 	test(function() {return m.element("custom", custom)}) //as long as it doesn't throw errors, it's fine
+
+	// m.element - default ctrl
+	test(function() {
+		m.element("custom1", {
+			view: function(ctrl){
+				ctrl.state.spy++;
+			}
+		})
+		var data = {spy:0};
+		m("custom1", {state:data})
+		return data.spy===1;
+	}) 
 
 	//lifetime - cached controller
 	test(function() {
 		reset();
-		m("custom#1",{},[],data)
-		m("custom#1",{},[],data)
+		m("custom#1",{state:data})
+		m("custom#1",{state:data})
 		return data.spy==3;
 	})	
 
 	//lifetime - unique controller
 	test(function() {
 		reset();
-		m("custom#1",{},[],data)
-		m("custom#2",{},[],data)
+		m("custom#1",{state:data})
+		m("custom#2",{state:data})
 		return data.spy==4;
 	})	
 
 	//lifetime - unique controller (lastId)
 	test(function() {
 		reset();
-		m("custom",{},[],data)
-		m("custom",{},[],data)
+		m("custom",{state:data})
+		m("custom",{state:data})
 		return data.spy==4;
 	})	
 
 	//lastId reset
 	test(function() {
 		reset();
-		m("custom",{},[],data)
+		m("custom",{state:data})
 		reset();
-		m("custom",{},[],data)
+		m("custom",{state:data})
 		return data.spy==2;
 	})	
 
@@ -65,9 +77,9 @@ function testMithrilElements(mock) {
 	test(function() {return m("custom#foo.bar").attrs.className === "bar"})
 
 	// m - children
-	test(function() {return m("custom", "test").children[0] === "test2"})
+	test(function() {return m("custom", "test").children[0] === "test"})
 	test(function() {return m("custom", "test", "test2").children[1] === "test2"})
-	test(function() {return m("custom", ["test"]).children[0] === "test2"})
+	test(function() {return m("custom", ["test"]).children[0] === "test"})
 
 	// m - functor children
 	test(function() {return m("custom", function(data){	return data	}).children[0] === "test1"})
@@ -93,20 +105,16 @@ function testMithrilElements(mock) {
 	test(function() {return m("div", [{foo: "bar"}])}) //as long as it doesn't throw errors, it's fine
 
 	//m - state
-	test(function() {return m("custom", {},[],'data')}) //as long as it doesn't throw errors, it's fine
-
 	test(function() {
-		var root = mock.document.createElement("div")
-
-		var success = false
-		m.render(root, m("custom", {config: function(elem, isInitialized, ctx) {ctx.data = 1}}))
-		m.render(root, m("custom", {config: function(elem, isInitialized, ctx) {success = ctx.data === 1}}))
-		return success
+		reset();
+		m("custom", {state:data})
+		return data.spy===2
 	})
+	test(function() {return m("custom", {state:data}).attrs.state===undefined})
 
-	// m.template
-	test(function() {return m("custom", [m.template('test1')]).children[0].tag === "test1"})
-	
+	// m - template
+	test(function() {return m("custom", [m('$test1')]).children[0].tag === "test1"})
+
 }
 //mock
 testMithrilElements(mock.window);
