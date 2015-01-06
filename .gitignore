@@ -1,2 +1,4 @@
 node_modules
 archive
+npm-debug.log
+.DS_Store
