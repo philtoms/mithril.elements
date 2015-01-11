@@ -1,9 +1,10 @@
 {
   "name": "mithril.elements",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "scripts": {
     "test": "grunt test"
   },
+  "description": "Adds composable custom element types to Mithril",
   "main": "mithril.elements.js",
   "repository" : { 
     "type" : "git",
@@ -35,6 +36,6 @@
     "sauce-tunnel": "~2.0.6",
     "colors": "~0.6.2",
     "lodash": "~2.4.1",
-    "mithril": "0.1.28"
+    "mithril": "~0.1.28"
   }
 }
