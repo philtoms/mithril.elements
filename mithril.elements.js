@@ -52,12 +52,8 @@ var m = (function app(window, mithril) {
     var element = elements[cell.tag];
     // pass through if not registered or escaped
     if (element && tag[0]!=='$') {
-      var hasAttrs = attrs != null && type.call(attrs) === OBJECT && !("tag" in attrs) && !("subtree" in attrs);
-      if (!hasAttrs && !children){
-        children=attrs;
-      }
       attrs = merge(module.attrs || {}, cell.attrs);
-      var state = hasAttrs && attrs.state;
+      var state = attrs.state;
       var id = module.id || (state && state.id!==undefined? state.id : (attrs.key!==undefined? attrs.key : (attrs.id!==undefined? attrs.id :undefined)));
       id = cell.tag + (id===undefined? lastId++ : id);
       // once-only element initialization. But note:
@@ -75,6 +71,11 @@ var m = (function app(window, mithril) {
         }
       }
     }
+    // merge outer over inner
+    else if (module.attrs){
+      merge(cell.attrs, module.attrs);
+    }
+
     // tidy up tag
     if (cell.tag && cell.tag[0]==='$'){
       cell.tag=cell.tag.substr(1);
@@ -99,7 +100,7 @@ var m = (function app(window, mithril) {
       ctrl.tag = root;
       ctrl.id = '$ctrl_' + root + sId++;
       return ctrl;
-    }
+    };
 
     // nothing more to do here, element initialization is lazily
     // deferred to first redraw

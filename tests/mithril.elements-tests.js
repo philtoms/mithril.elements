@@ -9,6 +9,9 @@ function testMithrilElements(mock) {
 		view: function(ctrl,ctx){
 			if (ctrl.data) ctrl.data.spy++;
 			if (typeof ctx === 'function') return m('div',ctx('test1'));
+			if (ctx.tag){
+				return m('div',m(ctx));
+			}
 			return m('div',ctx);
 		}
 	}
@@ -114,6 +117,9 @@ function testMithrilElements(mock) {
 
 	// m - template
 	test(function() {return m("custom", [m('$test1')]).children[0].tag === "test1"})
+
+	// m - compiled template
+	test(function() {return m("custom", [m('$test1.foo')]).children[0].attrs.className === "foo"})
 
 }
 //mock
