@@ -89,7 +89,7 @@ var m = (function app(window, mithril) {
   
   var sId=0;
   m.element = function(root, module){
-    if (type.call(root) !== STRING) throw new Error('selector m.element(selector, module) should be a string');
+    if (type.call(root) !== STRING) throw new Error('tag m.element(tag, module) should be a string');
 
     // all elements have controllers
     module.controller = module.controller || DefaultController;
