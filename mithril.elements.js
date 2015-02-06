@@ -33,13 +33,13 @@ var m = (function app(window, mithril) {
     return obj1;
   }
 
-  mithril.redraw = function(force) { 
+  mithril.redraw = function() { 
     // key into mithril page lifecycle
     if (strategy()==='all'){ 
       controllers={}; 
     } 
     lastId=0;
-    return redraw(force); 
+    return redraw.apply(null,arguments); 
   }; 
 
   mithril.redraw.strategy = strategy;
