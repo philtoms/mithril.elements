@@ -1,30 +1,114 @@
 function testMithrilElements(mock) {
 	m.deps(mock)
 	
+	var testdata, root;
+
+	window.test_setup = function(){
+		root = mock.document.createElement("div")
+		testdata={ctrlCalls:0,viewCalls:0}
+		m.redraw.strategy('all');
+		mock.requestAnimationFrame.$resolve()
+	}
+
 	var custom = {
-		controller:function(data){
-			if (data) data.spy+=1;
-			this.data=data || {};
+		controller:function(){
+			testdata.ctrlCalls++;
 		},
-		view: function(ctrl,ctx){
-			if (ctrl.data) ctrl.data.spy++;
-			if (typeof ctx === 'function') return m('div',ctx('test1'));
-			if (ctx.tag){
-				return m('div',m(ctx));
-			}
-			return m('div',ctx);
+		view: function(ctrl){
+			testdata.viewCalls++;
+			return m('div',ctrl.attrs||{},ctrl.inner||'test');
 		}
 	}
-	var data;
-	function reset(){
-		data={spy:0};
-		m.redraw.strategy('all');
-		m.redraw();
+
+	var customWithArgs = function(args){
+		return {
+			view: function(ctrl) {
+				testdata.state = args;
+				return 'test'+ (args || '');
+			}
+		};
 	}
 
-	//m.element
-	test(function() {return m.element("custom", custom)}) //as long as it doesn't throw errors, it's fine
 
+	// basic element syntax
+	test(function() {return m(custom)}) //as long as it doesn't throw errors, it's fine
+	test(function() {return m(custom,{className:'x'}).attrs.className==' x'})
+	test(function() {return m(custom,{className:'x'},custom).children[0]==custom})
+	test(function() {
+		m(customWithArgs(123)).module.view()
+		return testdata.state == 123
+	})
+
+	// composition
+	test(function() {
+		m.module(root,custom)
+		return root.childNodes[0].childNodes[0].nodeValue === "test"
+	})
+
+	// rendering
+	test(function() {
+		m.render(root,custom)
+		return root.childNodes[0].childNodes[0].nodeValue === "test"
+	})
+	test(function() {
+		m.render(root,m(custom))
+		return root.childNodes[0].childNodes[0].nodeValue === "test"
+	})
+
+	test(function() {
+		m.render(root,m(customWithArgs(123)))
+		return root.childNodes[0].nodeValue === "test123"
+	})
+
+	// identity
+	test(function() {
+		m.render(root,m(custom))
+		m.redraw.strategy('diff');
+		m.render(root,m(custom))
+		return testdata.ctrlCalls==1 && testdata.viewCalls==2
+	})
+
+	test(function() {
+		m.redraw.strategy('all');
+		m.render(root,m('div',[custom]))
+		m.redraw.strategy('diff');
+		m.render(root,m('div',[custom]))
+		return testdata.ctrlCalls==1 && testdata.viewCalls==2
+	})
+
+	test(function() {
+		m.redraw.strategy('all');
+		m.render(root,m('div',[custom]))
+		m.redraw.strategy('diff');
+		m.render(root,custom)
+		return testdata.ctrlCalls == testdata.viewCalls
+	})
+
+	// entity id
+	test(function() {
+		m.render(root,m(custom, {id:'x'}))
+		m.redraw.strategy('diff');
+		m.render(root,m(custom, {id:'x'}))
+		return testdata.ctrlCalls==1 && testdata.viewCalls==2
+	})
+
+	test(function() {
+		m.redraw.strategy('all');
+		m.render(root,m('div',[m(custom, {id:'x'})]))
+		m.redraw.strategy('diff');
+		m.render(root,m('div',[m(custom, {id:'x'})]))
+		return testdata.ctrlCalls==1 && testdata.viewCalls==2
+	})
+
+	test(function() {
+		m.redraw.strategy('all');
+		m.render(root,m('div',[m(custom, {id:'x'})]))
+		m.redraw.strategy('diff');
+		m.render(root,m(custom, {id:'x'}))
+		return testdata.ctrlCalls==1 && testdata.viewCalls==2
+	})
+
+	return;
 	// m.element - default ctrl
 	test(function() {
 		m.element("custom1", {

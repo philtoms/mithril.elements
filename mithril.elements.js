@@ -9,15 +9,59 @@
 'use strict';
 var m = (function app(window, mithril) {
 
-  var OBJECT = '[object Object]', ARRAY = '[object Array]', STRING = '[object String]', FUNCTION = "[object Function]";
+  var STRING = '[object String]', FUNCTION = "[object Function]";
   var type = {}.toString;
 
   // save the mithril API
   mithril = mithril || require('mithril');
-  var redraw = mithril.redraw;
-  var strategy = redraw.strategy;
+  var render = mithril.render;
 
-  function merge(obj1,obj2,filter){
+  var controllers={}, unloads=[];
+
+  function compose(cell,parent,node) {
+    if (type.call(cell) == STRING) return cell;
+    if (cell.view) cell = m(cell);
+
+    var data = cell, attrs = cell.attrs;
+    var id = (attrs.id || attrs.key)? '' + attrs.id + attrs.key : parent + cell.tag + node + Object.keys(cell.attrs).join();
+    
+    if (cell.module) {
+      var instance = controllers[id] = controllers[id] || new (cell.module.controller || function(){})
+      instance.inner = cell.children.length>1? cell.children:cell.children[0];
+      instance.attrs = cell.attrs;
+      if (instance.onunload) unloads.push(instance.onunload);
+      data = compose(cell.module.view(instance),id,0);
+    }
+    else for (var i=0, l=cell.children.length; i<l;i++){
+
+      data.children[i] = compose(cell.children[i], id, i);
+    }
+    return data;
+  }
+
+  mithril.render = function(root, cell, forceRecreation) {
+    if (m.redraw.strategy() === 'all'){
+      // key into mithril page lifecycle
+      controllers={};
+      for (var i=0,l=unloads.length;i<l;i++){
+        unloads[i]();
+      }
+    }
+    cell = compose(cell,0,0);
+    render(root, cell, forceRecreation);
+  }
+
+  var m = function(module) { 
+    var tag = module.view? '$elm' : module;
+    var args = [tag].concat([].slice.call(arguments,1));
+    var cell = mithril.apply(null,args);
+    if (module.view) {
+      cell.module = module;
+    }
+    return cell;
+  };
+
+  m.merge = function(obj1,obj2,filter) {
     var classAttrName = 'class' in obj1 ? 'class' : 'className';
     var classes = obj1[classAttrName]|| '';
     Object.keys(obj2).forEach(function(k){
@@ -33,82 +77,8 @@ var m = (function app(window, mithril) {
     return obj1;
   }
 
-  mithril.redraw = function() { 
-    // key into mithril page lifecycle
-    if (strategy()==='all'){ 
-      controllers={}; 
-    } 
-    lastId=0;
-    return redraw.apply(null,arguments); 
-  }; 
-
-  mithril.redraw.strategy = strategy;
-
-  var elements = {}, controllers={},lastId=0;
-  var m = function(module, attrs, children) { 
-    var tag = module.tag || module;
-    var args = [tag].concat([].slice.call(arguments,1));
-    var cell = mithril.apply(null,args);
-    var element = elements[cell.tag];
-    // pass through if not registered or escaped
-    if (element && tag[0]!=='$') {
-      attrs = merge(module.attrs || {}, cell.attrs);
-      var state = attrs.state;
-      var id = module.id || (state && state.id!==undefined? state.id : (attrs.key!==undefined? attrs.key : (attrs.id!==undefined? attrs.id :undefined)));
-      id = cell.tag + (id===undefined? lastId++ : id);
-      // once-only element initialization. But note:
-      //  module.id - singleton
-      //  controllers[id] - cached
-      //  default - new instance
-      var ctrl = (module.id && module) || controllers[id] || new element.controller(state);
-      controllers[id]=ctrl;
-      var inner = cell.children.length==1? cell.children[0]:cell.children;
-      var c_cell = element.view(ctrl, inner);
-      if (c_cell){
-        cell=c_cell;
-        if (type.call(cell) !== ARRAY) {
-          merge(cell.attrs,attrs,'state');
-        }
-      }
-    }
-    // merge outer over inner
-    else if (module.attrs){
-      merge(cell.attrs, module.attrs);
-    }
-
-    // tidy up tag
-    if (cell.tag && cell.tag[0]==='$'){
-      cell.tag=cell.tag.substr(1);
-    }
-    return cell;
-  };
-
-  function DefaultController(state){
-    this.state = state;
-  }
-  
-  var sId=0;
-  m.element = function(root, module){
-    if (type.call(root) !== STRING) throw new Error('tag m.element(tag, module) should be a string');
-
-    // all elements have controllers
-    module.controller = module.controller || DefaultController;
-
-    // add a programmable interface to the element
-    module.instance = function(state){
-      var ctrl = new module.controller(state);
-      ctrl.tag = root;
-      ctrl.id = '$ctrl_' + root + sId++;
-      return ctrl;
-    };
-
-    // nothing more to do here, element initialization is lazily
-    // deferred to first redraw
-    return (elements[root] = module);
-  };
-
   // build the new API
-  return merge(m,mithril);
+  return m.merge(m,mithril);
 
 })(typeof window != "undefined" ? window : {},m);
 

@@ -26,6 +26,7 @@ function test(condition) {
 		start = performance.now()
 	}
 	try {
+		(window.test_setup ||  function(){})();
 		if (!condition()) throw new Error("failed")
 	}
 	catch (e) {
