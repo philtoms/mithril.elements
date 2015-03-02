@@ -9,43 +9,65 @@
 'use strict';
 var m = (function app(window, mithril) {
 
-  var STRING = '[object String]', FUNCTION = "[object Function]";
+  var STRING = '[object String]', ARRAY = "[object Array]";
   var type = {}.toString;
 
   // save the mithril API
   mithril = mithril || require('mithril');
   var render = mithril.render;
 
-  var controllers={}, unloads=[];
+  /*
+   * compose a digraph of the current v-dom
+   * @param {cell} new graph input
+   * @param {d} node depth
+   * @param {p} node position at d
+   * @param {ctx} context at d:p
+   */
+  function compose(cell,d,p,ctx) {
+    if (!cell) return '';
+    if (type.call(cell) === ARRAY) {
+      return cell.map(function(c,i){
+        return compose(c,d+''+p,i,ctx);
+      });
+    }
+    if (!cell.tag) return cell;
+    var data = cell, attrs = cell.attrs, children = cell.children;
 
-  function compose(cell,parent,node) {
-    if (type.call(cell) == STRING) return cell;
-    if (cell.view) cell = m(cell);
+    // calculate position for new node and check if it already exists.
+    // Note that model entity id takes precidence over node position - 
+    //  handles model state change at a specific node position, eg:
+    //    data list changes
+    var id = (attrs.id || attrs.key)? 'id' + (attrs.id || '') + (attrs.key || '') : d + cell.tag + p + (Object.keys(attrs).join()||'');
+    var node = graph[id];
 
-    var data = cell, attrs = cell.attrs;
-    var id = (attrs.id || attrs.key)? '' + attrs.id + attrs.key : parent + cell.tag + node + Object.keys(cell.attrs).join();
-    
+    // composition: [module -> ctrl] -> children -> [view] -> cell
     if (cell.module) {
-      var instance = controllers[id] = controllers[id] || new (cell.module.controller || function(){})
-      instance.inner = cell.children.length>1? cell.children:cell.children[0];
-      instance.attrs = cell.attrs;
-      if (instance.onunload) unloads.push(instance.onunload);
-      data = compose(cell.module.view(instance),id,0);
+      node = node || new (cell.module.controller || function(){})(ctx);
     }
-    else for (var i=0, l=cell.children.length; i<l;i++){
+    for (var i=0, l=children.length; i<l; i++) {
+      data.children[i] = compose(children[i], id, i, node);
+    }
+    if (cell.module) {
+      node.inner = children.length>1? children:children[0];
+      node.attrs = cell.attrs;
+      if (node.onunload) unloads.push(node.onunload);
+      data = compose(cell.module.view(node),d,p,ctx);
+      if (data.attrs) m.merge(data.attrs,attrs)
+    }
 
-      data.children[i] = compose(cell.children[i], id, i);
-    }
+    if (node) graph[id] =  node; 
     return data;
   }
 
+  var graph={}, unloads=[];
   mithril.render = function(root, cell, forceRecreation) {
+    // key into mithril page lifecycle
     if (m.redraw.strategy() === 'all'){
-      // key into mithril page lifecycle
-      controllers={};
       for (var i=0,l=unloads.length;i<l;i++){
         unloads[i]();
       }
+      graph={};
+      unloads.length=0;
     }
     cell = compose(cell,0,0);
     render(root, cell, forceRecreation);
