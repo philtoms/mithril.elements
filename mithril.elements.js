@@ -44,12 +44,13 @@ var m = (function app(window, mithril) {
 
   mithril.redraw.strategy = strategy;
 
-  var elements = {}, controllers={},lastId=0;
+  mithril.elements = {};
+  var controllers={},lastId=0;
   var m = function(module, attrs, children) { 
     var tag = module.tag || module;
     var args = [tag].concat([].slice.call(arguments,1));
     var cell = mithril.apply(null,args);
-    var element = elements[cell.tag];
+    var element = mithril.elements[cell.tag];
     // pass through if not registered or escaped
     if (element && tag[0]!=='$') {
       attrs = merge(module.attrs || {}, cell.attrs);
@@ -104,7 +105,7 @@ var m = (function app(window, mithril) {
 
     // nothing more to do here, element initialization is lazily
     // deferred to first redraw
-    return (elements[root] = module);
+    return (mithril.elements[root] = module);
   };
 
   // build the new API
