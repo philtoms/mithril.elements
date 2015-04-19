@@ -44,13 +44,12 @@ var m = (function app(window, mithril) {
 
   mithril.redraw.strategy = strategy;
 
-  mithril.elements = {};
   var controllers={},lastId=0;
   var m = function(module, attrs, children) { 
     var tag = module.tag || module;
     var args = [tag].concat([].slice.call(arguments,1));
     var cell = mithril.apply(null,args);
-    var element = mithril.elements[cell.tag];
+    var element = m.elements[cell.tag];
     // pass through if not registered or escaped
     if (element && tag[0]!=='$') {
       attrs = merge(module.attrs || {}, cell.attrs);
@@ -88,6 +87,9 @@ var m = (function app(window, mithril) {
     this.state = state;
   }
   
+  // expose registration dictionary
+  m.elements = {};
+
   var sId=0;
   m.element = function(root, module){
     if (type.call(root) !== STRING) throw new Error('tag m.element(tag, module) should be a string');
@@ -105,7 +107,7 @@ var m = (function app(window, mithril) {
 
     // nothing more to do here, element initialization is lazily
     // deferred to first redraw
-    return (mithril.elements[root] = module);
+    return (m.elements[root] = module);
   };
 
   // build the new API
